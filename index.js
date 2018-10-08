@@ -12,6 +12,7 @@ const STORY_STATES = {
 const LABEL_STORY_MAP = {
   'needs more work': STORY_STATES.IN_DEVELOPMENT,
   'ready for review': STORY_STATES.READY_FOR_REVIEW,
+  'ready to merge': STORY_STATES.COMPLETED,
 };
 
 class ClubhouseClient {
