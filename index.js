@@ -1,5 +1,19 @@
 const Clubhouse = require('clubhouse-lib');
 
+const STORY_STATES = {
+  UNSCHEDULED: 'Unscheduled',
+  READY_FOR_DEVELOPMENT: 'Ready for Development',
+  NEXT_UP: 'Next Up',
+  IN_DEVELOPMENT: 'In Development',
+  READY_FOR_REVIEW: 'Ready for Review',
+  COMPLETED: 'Completed',
+};
+
+const LABEL_STORY_MAP = {
+  'needs more work': STORY_STATES.IN_DEVELOPMENT,
+  'ready for review': STORY_STATES.READY_FOR_REVIEW,
+};
+
 class ClubhouseClient {
   constructor() {
     this.client = Clubhouse.create(process.env.CLUBHOUSE_API_TOKEN);
@@ -36,25 +50,20 @@ module.exports = (robot) => {
     robot.log.debug('Pull request labeled!');
     const labelName = context.payload.label.name;
     const storyId = clubhouseStoryId(context.payload.pull_request);
+    const newStoryState = LABEL_STORY_MAP[labelName];
 
-    if (labelName === 'ready for review') {
-      if (storyId) {
-        robot.log.debug(`Moving story ${storyId} to "Ready for Review"`);
-        client.updateStoryState(storyId, 'Ready for Review');
-      }
+    if (storyId && newStoryState) {
+      robot.log.debug(`Moving story ${storyId} to "${newStoryState}"`)
+      client.updateStoryState(storyId, newStoryState);
     }
   });
 
   robot.on('pull_request.unlabeled', async context => {
     const labelName = context.payload.label.name;
-    const storyId = clubhouseStoryId(context.payload.pull_request);
+    const oldStoryState = LABEL_STORY_MAP[labelName];
 
-    if (labelName === 'ready for review') {
+    if (oldStoryState) {
       robot.log.debug('Pull request unlabeled!');
-      if (storyId) {
-        robot.log.debug(`Moving story ${storyId} back to "In Development"`);
-        client.updateStoryState(storyId, 'In Development');
-      }
     }
   });
 };
